@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="24"
-        android:targetSdkVersion="36" />
+        android:targetSdkVersion="37" />
 
     <!--
          Nécessaire pour démarrer et faire tourner le service en avant-plan
