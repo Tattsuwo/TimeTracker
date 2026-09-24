@@ -12,12 +12,12 @@ android {
     namespace = "com.example.timetracker"
     // A VERIFIER : 36 correspond à Android 16, la version stable la plus
     // récente au moment de la génération (source : developer.android.com/about/versions/16/setup-sdk).
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.timetracker"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
     }
