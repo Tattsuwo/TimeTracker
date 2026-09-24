@@ -1,6 +1,5 @@
 package com.example.timetracker.ui.navigation
 
-import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -12,6 +11,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.timetracker.ui.common.HistoryIcon
+import com.example.timetracker.ui.common.SettingsIcon
+import com.example.timetracker.ui.common.SummaryIcon
+import com.example.timetracker.ui.common.TimerIcon
 import com.example.timetracker.ui.history.HistoryScreen
 import com.example.timetracker.ui.settings.SettingsScreen
 import com.example.timetracker.ui.summary.SummaryScreen
@@ -41,7 +44,14 @@ fun TimeTrackerApp() {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(destination.icon, contentDescription = destination.label) },
+                        icon = {
+                            when (destination) {
+                                TimeTrackerDestination.TIMER -> TimerIcon()
+                                TimeTrackerDestination.HISTORY -> HistoryIcon()
+                                TimeTrackerDestination.SUMMARY -> SummaryIcon()
+                                TimeTrackerDestination.SETTINGS -> SettingsIcon()
+                            }
+                        },
                         label = { androidx.compose.material3.Text(destination.label) }
                     )
                 }
