@@ -19,6 +19,8 @@ import com.example.timetracker.ui.history.HistoryScreen
 import com.example.timetracker.ui.settings.SettingsScreen
 import com.example.timetracker.ui.summary.SummaryScreen
 import com.example.timetracker.ui.timer.TimerScreen
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
 
 @Composable
 fun TimeTrackerApp() {
