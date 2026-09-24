@@ -17,7 +17,7 @@ agp = "9.4.0"
 # A VERIFIER : la version de KSP doit correspondre exactement à la version de
 # Kotlin ci-dessus (format "<version-kotlin>-<build-ksp>").
 # https://github.com/google/ksp/releases
-ksp = "2.4.20-1.0.30"
+ksp = "2.3.11"
 # Vérifiée (developer.android.com/jetpack/androidx/releases/room, nov. 2025)
 room = "2.8.4"
 # Vérifiée (Maven Central, avril 2026)
