@@ -1,0 +1,45 @@
+# --- Gradle ---
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+gradle-app.setting
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# --- Fichiers locaux à la machine (ne doivent JAMAIS être partagés/versionnés) ---
+# Contient le chemin absolu vers votre SDK Android, propre à chaque machine.
+local.properties
+# Certificats de signature : à garder précieusement en dehors du dépôt Git,
+# jamais à committer (voir la partie "APK signé" du projet).
+*.jks
+*.keystore
+keystore.properties
+
+# --- Android Studio / IntelliJ ---
+.idea/*
+!.idea/codeStyles/
+!.idea/runConfigurations/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# --- Sorties de build ---
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+
+# --- Logs et fichiers temporaires ---
+*.log
+*.hprof
+.DS_Store
+Thumbs.db
+
+# --- Room ---
+# Les schémas JSON exportés dans app/schemas (voir room { schemaDirectory(...) }
+# dans app/build.gradle.kts) NE sont PAS ignorés : ils doivent au contraire être
+# versionnés, car ils servent à écrire les migrations entre versions de la base.
