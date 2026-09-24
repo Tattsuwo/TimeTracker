@@ -21,33 +21,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Instant
 
-/**
- * Service en avant-plan dont le seul rôle est d'afficher une notification
- * persistante tant qu'un chrono est actif, pour deux raisons :
- * 1. informer clairement l'utilisateur qu'un chrono tourne, même écran
- *    verrouillé ou appli fermée ;
- * 2. réduire fortement le risque que le système tue le processus de l'appli
- *    en arrière-plan (un service "foreground" a une priorité bien plus
- *    élevée qu'un simple processus en tâche de fond).
- *
- * Le service ne fait AUCUN calcul de durée lui-même : à chaque
- * (re)démarrage, il relit l'heure de début directement depuis Room via le
- * repository. Ainsi, même si Android tue puis relance le service, ou si
- * l'heure affichée dans la notification n'est mise à jour qu'une fois par
- * minute, la source de vérité reste toujours la base de données, jamais une
- * variable en mémoire du service.
- */
 class TimerForegroundService : Service() {
 
     private var job: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onBind(intent: Intent?): IBinder? = null
-    // Service "démarré" (startService), pas "lié" : personne n'a besoin de
-    // dialoguer directement avec lui, il ne fait que pousser une notification.
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         createNotificationChannelIfNeeded()
     }
 
@@ -59,11 +42,6 @@ class TimerForegroundService : Service() {
             }
             else -> startForegroundLoop()
         }
-        // START_NOT_STICKY : si le système tue quand même ce service faute de
-        // mémoire, on ne veut pas qu'il redémarre tout seul sans contexte
-        // (l'utilisateur peut très bien avoir arrêté le chrono entre-temps) ;
-        // c'est l'état persisté dans Room (ActiveTimer), et non ce service,
-        // qui reste la source de vérité au prochain lancement de l'appli.
         return START_NOT_STICKY
     }
 
@@ -78,10 +56,6 @@ class TimerForegroundService : Service() {
             }
             while (true) {
                 startForeground(NOTIFICATION_ID, buildNotification(active.startTime))
-                // Une notification par minute suffit largement à informer
-                // l'utilisateur qu'un chrono tourne ; la mettre à jour chaque
-                // seconde consommerait de la batterie pour un gain
-                // d'information nul (l'heure de démarrage, elle, ne change pas).
                 delay(ONE_MINUTE_MS)
             }
         }
@@ -105,20 +79,18 @@ class TimerForegroundService : Service() {
 
     private fun createNotificationChannelIfNeeded() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        // Les canaux de notification n'existent qu'à partir d'Android 8 (API 26).
         val manager = getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
             CHANNEL_ID,
             getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_LOW
-            // IMPORTANCE_LOW : pas de son ni de vibration, cette notification
-            // est informative et persistante, pas une alerte.
         )
         manager.createNotificationChannel(channel)
     }
 
     override fun onDestroy() {
         job?.cancel()
+        isRunning = false
         super.onDestroy()
     }
 
@@ -128,10 +100,12 @@ class TimerForegroundService : Service() {
         private const val ONE_MINUTE_MS = 60_000L
         private const val ACTION_STOP = "com.example.timetracker.action.STOP"
 
+        @Volatile
+        var isRunning: Boolean = false
+            private set
+
         fun start(context: Context) {
             val intent = Intent(context, TimerForegroundService::class.java)
-            // ContextCompat.startForegroundService gère la différence
-            // pré/post Android 8 pour démarrer un service en avant-plan.
             androidx.core.content.ContextCompat.startForegroundService(context, intent)
         }
 
