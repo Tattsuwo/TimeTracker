@@ -1,0 +1,48 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Nécessaire pour démarrer et faire tourner le service en avant-plan
+         pendant le chronomètre actif. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Depuis Android 14 (API 34), chaque service en avant-plan doit
+         déclarer un type précis. Aucun des types "métier" (localisation,
+         musique, caméra...) ne correspond à un chronomètre : on utilise donc
+         "specialUse", qui exige la permission dédiée ci-dessous.
+         Source : https://developer.android.com/develop/background-work/services/fgs/service-types -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Depuis Android 13 (API 33), afficher une notification nécessite
+         l'autorisation explicite de l'utilisateur : elle est demandée au
+         runtime avant de démarrer le chronomètre (voir MainActivity). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".TimeTrackerApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.TimeTracker"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TimeTracker">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- exported="false" : ce service n'est utilisé que par notre propre
+             appli, aucune autre app ne doit pouvoir le démarrer. -->
+        <service
+            android:name=".service.TimerForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Chronometre de suivi du temps demarre explicitement par l'utilisateur" />
+        </service>
+
+    </application>
+
+</manifest>

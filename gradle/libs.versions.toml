@@ -1,0 +1,64 @@
+# Catalogue de versions Gradle.
+#
+# Les versions ci-dessous marquées "vérifiée" ont été confirmées via une
+# recherche web au moment de la génération de ce projet (septembre 2026) sur
+# les pages officielles (developer.android.com, blog JetBrains, Maven Central).
+# Les versions marquées "A VERIFIER" n'ont volontairement PAS été devinées :
+# ouvrez le lien indiqué et reportez la dernière version stable avant de
+# lancer votre premier build. Cet écosystème évolue vite (nouvelle version
+# quasiment chaque mois), donc même les versions "vérifiées" doivent être
+# recontrôlées si vous ouvrez ce projet plusieurs semaines après sa génération.
+
+[versions]
+# Vérifiée (blog.jetbrains.com, sept. 2026) : https://kotlinlang.org/docs/releases.html
+kotlin = "2.4.20"
+# Vérifiée (developer.android.com/build/releases, sept. 2026)
+agp = "9.4.0"
+# A VERIFIER : la version de KSP doit correspondre exactement à la version de
+# Kotlin ci-dessus (format "<version-kotlin>-<build-ksp>").
+# https://github.com/google/ksp/releases
+ksp = "2.4.20-1.0.30"
+# Vérifiée (developer.android.com/jetpack/androidx/releases/room, nov. 2025)
+room = "2.8.4"
+# Vérifiée (Maven Central, avril 2026)
+kotlinxSerializationJson = "1.11.0"
+# Vérifiée (developer.android.com/jetpack/androidx/releases/core, janv. 2026)
+androidxActivity = "1.12.2"
+# A VERIFIER : https://developer.android.com/jetpack/androidx/releases/lifecycle
+androidxLifecycle = "2.9.0"
+# A VERIFIER : https://developer.android.com/jetpack/androidx/releases/navigation
+androidxNavigationCompose = "2.9.0"
+androidxCoreKtx = "1.15.0"
+# Vérifiée (developer.android.com/jetpack/androidx/releases/compose-material3, sept. 2026)
+composeMaterial3 = "1.4.0"
+# Vérifiée (developer.android.com/jetpack/androidx/releases/compose-ui, sept. 2026)
+composeUi = "1.12.1"
+
+[libraries]
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCoreKtx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigationCompose" }
+
+androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "composeUi" }
+androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics", version.ref = "composeUi" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "composeUi" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "composeUi" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial3" }
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "composeUi" }
+
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }

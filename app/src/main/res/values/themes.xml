@@ -1,0 +1,6 @@
+<resources>
+    <!-- Thème "coquille" utilisé uniquement le temps que Compose prenne la
+         main (fond de fenêtre avant le premier rendu). Toute l'apparence
+         réelle de l'application est définie en Kotlin dans ui/theme/Theme.kt. -->
+    <style name="Theme.TimeTracker" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
