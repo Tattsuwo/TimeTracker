@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Suivi du temps</string>
-    <string name="notification_channel_name">Chronomètre actif</string>
-    <string name="notification_timer_text">Démarré à %1$s</string>
-    <string name="notification_timer_title">Chronomètre en cours</string>
-    <style name="Theme.TimeTracker" parent="android:Theme.Material.Light.NoActionBar"/>
-</resources>
