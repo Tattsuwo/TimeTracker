@@ -39,6 +39,9 @@ output-metadata.json
 .DS_Store
 Thumbs.db
 
+# --- App ---
+app/build/
+
 # --- Room ---
 # Les schémas JSON exportés dans app/schemas (voir room { schemaDirectory(...) }
 # dans app/build.gradle.kts) NE sont PAS ignorés : ils doivent au contraire être
