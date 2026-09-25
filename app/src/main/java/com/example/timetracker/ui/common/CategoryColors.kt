@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
  * deux cas, on obtient un ton doux et cohérent avec le reste de l'écran,
  * plutôt qu'un mélange fixe avec du blanc qui rendrait mal en thème sombre.
  */
-fun Color.attenuated(background: Color, alpha: Float = 0.16f): Color =
+fun Color.attenuated(background: Color, alpha: Float = 0.05f): Color =
     this.copy(alpha = alpha).compositeOver(background)
 
 /**
