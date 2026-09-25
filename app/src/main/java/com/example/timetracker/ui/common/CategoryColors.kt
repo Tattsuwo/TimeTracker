@@ -12,9 +12,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+
+/**
+ * Nuance atténuée d'une couleur de catégorie, obtenue en la superposant à
+ * faible opacité sur la couleur de fond actuelle du thème (compositeOver).
+ * Cette approche s'adapte automatiquement au thème clair ou sombre : dans les
+ * deux cas, on obtient un ton doux et cohérent avec le reste de l'écran,
+ * plutôt qu'un mélange fixe avec du blanc qui rendrait mal en thème sombre.
+ */
+fun Color.attenuated(background: Color, alpha: Float = 0.16f): Color =
+    this.copy(alpha = alpha).compositeOver(background)
 
 /**
  * Palette fixe (plutôt qu'un sélecteur de couleur libre façon roue HSV) :

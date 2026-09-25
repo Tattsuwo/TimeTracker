@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timetracker.data.SessionWithCategory
 import com.example.timetracker.ui.common.CategoryColorDot
+import com.example.timetracker.ui.common.attenuated
 import com.example.timetracker.ui.rememberTimeTrackerViewModelFactory
 import com.example.timetracker.util.durationBetween
 import com.example.timetracker.util.toDisplayString
@@ -95,8 +97,10 @@ private fun DayHeader(dayLabel: String, total: String) {
 @Composable
 private fun SessionRow(item: SessionWithCategory, onClick: () -> Unit) {
     val session = item.session
+    val tintedBackground = Color(item.categoryColor).attenuated(MaterialTheme.colorScheme.surface)
     Card(
         onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = tintedBackground),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
