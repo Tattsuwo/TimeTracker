@@ -176,47 +176,53 @@ class TimeTrackerRepository(
     }
 
     /**
-     * Restaure un JSON exporté précédemment. Les sessions sont rattachées
-     * par NOM de catégorie : si une catégorie du même nom existe déjà sur cet
-     * appareil, elle est réutilisée ; sinon elle est créée à la volée.
+     * Restaure un JSON exporté précédemment, EN REMPLAÇANT ENTIÈREMENT les
+     * données actuelles : toutes les sessions et catégories existantes sont
+     * supprimées avant de réinsérer le contenu du fichier. C'est un choix
+     * assumé (plutôt qu'une fusion additive) : redonner un point de départ
+     * propre et prévisible après restauration, sans risquer de doublons si
+     * le même fichier est importé plusieurs fois.
      *
-     * Import volontairement additif (pas de suppression, pas de détection de
-     * doublons) : restaurer deux fois le même fichier créera deux fois les
-     * mêmes sessions. C'est une base simple à faire évoluer si besoin
-     * (par ex. ignorer une session dont le triplet nom/début/fin existe déjà).
+     * Le chrono actif éventuel (ActiveTimer) n'est volontairement pas touché :
+     * il n'a aucun rapport avec les données sauvegardées/restaurées.
+     *
+     * Le vidage puis la réinsertion se font dans une seule transaction : si
+     * l'import échoue en cours de route (fichier corrompu...), les anciennes
+     * données ne sont jamais perdues sans que les nouvelles aient pu prendre
+     * leur place.
      */
     suspend fun importFromJson(json: String): Result<ImportSummary> = runCatching {
         val payload = backupManager.deserialize(json)
-        val categoryIdByName = mutableMapOf<String, Long>()
-        var categoriesCreated = 0
 
-        suspend fun resolveCategoryId(name: String, color: Int = Category.DEFAULT_COLOR): Long {
-            categoryIdByName[name]?.let { return it }
-            val existing = categoryDao.getByName(name)
-            // La couleur du JSON n'est appliquée qu'à la création d'une
-            // nouvelle catégorie ; si elle existe déjà localement, sa couleur
-            // actuelle (potentiellement déjà personnalisée) n'est pas écrasée.
-            val id = existing?.id
-                ?: categoryDao.insert(Category(name = name, color = color)).also { categoriesCreated++ }
-            categoryIdByName[name] = id
-            return id
-        }
+        database.withTransaction {
+            sessionDao.deleteAll()
+            categoryDao.deleteAll()
 
-        payload.categories.forEach { resolveCategoryId(it.name, it.color) }
-        payload.sessions.forEach { backup ->
-            val categoryId = resolveCategoryId(backup.categoryName)
-            sessionDao.insert(
-                Session(
-                    name = backup.name,
-                    description = backup.description,
-                    categoryId = categoryId,
-                    startTime = Instant.ofEpochMilli(backup.startTimeEpochMillis),
-                    endTime = Instant.ofEpochMilli(backup.endTimeEpochMillis)
+            val categoryIdByName = mutableMapOf<String, Long>()
+
+            suspend fun resolveCategoryId(name: String, color: Int = Category.DEFAULT_COLOR): Long {
+                categoryIdByName[name]?.let { return it }
+                val id = categoryDao.insert(Category(name = name, color = color))
+                categoryIdByName[name] = id
+                return id
+            }
+
+            payload.categories.forEach { resolveCategoryId(it.name, it.color) }
+            payload.sessions.forEach { backup ->
+                val categoryId = resolveCategoryId(backup.categoryName)
+                sessionDao.insert(
+                    Session(
+                        name = backup.name,
+                        description = backup.description,
+                        categoryId = categoryId,
+                        startTime = Instant.ofEpochMilli(backup.startTimeEpochMillis),
+                        endTime = Instant.ofEpochMilli(backup.endTimeEpochMillis)
+                    )
                 )
-            )
-        }
+            }
 
-        ImportSummary(categoriesCreated = categoriesCreated, sessionsImported = payload.sessions.size)
+            ImportSummary(categoriesCreated = categoryIdByName.size, sessionsImported = payload.sessions.size)
+        }
     }
 
     /** Écrit l'export JSON complet dans le fichier choisi par l'utilisateur via le SAF. */

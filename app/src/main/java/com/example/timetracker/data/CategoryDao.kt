@@ -36,13 +36,13 @@ interface CategoryDao {
     suspend fun countByName(name: String): Int
     // Utilisé pour éviter les doublons de nom lors de la création.
 
-    @Query("SELECT * FROM categories WHERE name = :name LIMIT 1")
-    suspend fun getByName(name: String): Category?
-    // Utilisé lors d'une restauration JSON pour relier chaque session
-    // importée à la catégorie locale du même nom (voir Repository.importFromJson).
-
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun countAll(): Int
     // Utilisé pour empêcher de supprimer la toute dernière catégorie
     // restante (il en faut au moins une pour pouvoir nommer une session).
+
+    @Query("DELETE FROM categories")
+    suspend fun deleteAll()
+    // Utilisé par une restauration JSON en mode "remplacement" : on vide la
+    // table avant de réinsérer le contenu du fichier importé.
 }

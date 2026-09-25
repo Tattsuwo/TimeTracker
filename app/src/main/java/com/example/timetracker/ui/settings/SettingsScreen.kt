@@ -52,6 +52,7 @@ fun SettingsScreen() {
     var categoryBeingEdited by remember { mutableStateOf<Category?>(null) }
     var categoryPendingDelete by remember { mutableStateOf<Category?>(null) }
     var pendingDeleteSessionCount by remember { mutableStateOf<Int?>(null) }
+    var showImportConfirmation by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
@@ -82,12 +83,12 @@ fun SettingsScreen() {
             Text("Sauvegarde", style = MaterialTheme.typography.titleLarge)
             Row(modifier = Modifier.padding(top = 12.dp)) {
                 OutlinedButton(onClick = { exportLauncher.launch("sauvegarde-suivi-du-temps.json") }) {
-                    Text("Exporter (JSON)")
+                    Text("Exporter")
                 }
                 OutlinedButton(
-                    onClick = { importLauncher.launch(arrayOf("application/json")) },
+                    onClick = { showImportConfirmation = true },
                     modifier = Modifier.padding(start = 8.dp)
-                ) { Text("Restaurer") }
+                ) { Text("Importer") }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
@@ -115,6 +116,29 @@ fun SettingsScreen() {
                 }
             }
         }
+    }
+
+    if (showImportConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirmation = false },
+            title = { Text("Remplacer toutes les données ?") },
+            text = {
+                Text(
+                    "L'import va supprimer TOUTES les sessions et catégories actuelles " +
+                        "pour les remplacer par le contenu du fichier choisi. Cette action " +
+                        "est irréversible."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showImportConfirmation = false
+                    importLauncher.launch(arrayOf("application/json"))
+                }) { Text("Continuer") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirmation = false }) { Text("Annuler") }
+            }
+        )
     }
 
     if (showAddDialog) {

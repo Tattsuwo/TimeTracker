@@ -50,4 +50,9 @@ interface SessionDao {
     suspend fun countByCategoryId(categoryId: Long): Int
     // Utilisé pour prévenir l'utilisateur du nombre de sessions qui seront
     // supprimées avant qu'il ne confirme la suppression d'une catégorie.
+
+    @Query("DELETE FROM sessions")
+    suspend fun deleteAll()
+    // Utilisé par une restauration JSON en mode "remplacement" : on vide la
+    // table avant de réinsérer le contenu du fichier importé.
 }

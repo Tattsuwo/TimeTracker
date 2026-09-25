@@ -71,12 +71,14 @@ Android Studio (File > Open > sélectionner le dossier `TimeTracker`).
   Réglages ou à la volée pendant l'arrêt d'un chrono, suppression en cascade
   (avec confirmation et décompte des sessions concernées).
 - Synthèse par jour / par activité / par catégorie.
-- Export et restauration JSON via le sélecteur de fichiers système.
+- Export et restauration JSON via le sélecteur de fichiers système (la
+  restauration remplace entièrement les données existantes, avec confirmation).
 - Heures en 24h, durées en heures et minutes.
 
 ## Pistes d'évolution volontairement laissées de côté
 
-- Détection de doublons à l'import JSON (l'import est additif).
+- Détection de doublons à l'import JSON (inutile désormais : l'import
+  remplace entièrement les données existantes plutôt que de les fusionner).
 - Filtrage par période dans la synthèse (aujourd'hui/7 jours/tout).
 - Palette de couleurs fixe (10 teintes) plutôt qu'un sélecteur libre type roue
   HSV, pour rester simple et sans dépendance externe.
