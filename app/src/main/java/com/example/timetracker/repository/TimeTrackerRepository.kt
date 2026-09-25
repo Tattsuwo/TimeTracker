@@ -6,11 +6,13 @@ import com.example.timetracker.backup.CategoryBackup
 import com.example.timetracker.backup.SessionBackup
 import com.example.timetracker.data.ActiveTimer
 import com.example.timetracker.data.ActiveTimerDao
+import com.example.timetracker.data.AppDatabase
 import com.example.timetracker.data.Category
 import com.example.timetracker.data.CategoryDao
 import com.example.timetracker.data.Session
 import com.example.timetracker.data.SessionDao
 import com.example.timetracker.data.SessionWithCategory
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.Instant
@@ -25,6 +27,7 @@ data class ImportSummary(val categoriesCreated: Int, val sessionsImported: Int)
  * fichier a besoin d'être touché.
  */
 class TimeTrackerRepository(
+    private val database: AppDatabase,
     private val categoryDao: CategoryDao,
     private val sessionDao: SessionDao,
     private val activeTimerDao: ActiveTimerDao,
@@ -35,20 +38,46 @@ class TimeTrackerRepository(
 
     fun observeCategories(): Flow<List<Category>> = categoryDao.observeAll()
 
-    suspend fun addCategory(name: String): Result<Long> {
+    suspend fun addCategory(name: String, color: Int = Category.DEFAULT_COLOR): Result<Long> {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return Result.failure(IllegalArgumentException("Nom vide"))
         if (categoryDao.countByName(trimmed) > 0) {
             return Result.failure(IllegalStateException("Cette catégorie existe déjà"))
         }
-        return Result.success(categoryDao.insert(Category(name = trimmed)))
+        return Result.success(categoryDao.insert(Category(name = trimmed, color = color)))
     }
     // Result<> plutôt qu'une exception non gérée : l'UI peut afficher un
     // message clair ("nom déjà utilisé") sans bloc try/catch générique.
+    // color a une valeur par défaut : les appels existants (catégorie créée
+    // à la volée depuis le sélecteur pendant l'arrêt d'un chrono) n'ont pas
+    // besoin de choisir explicitement une couleur.
 
-    suspend fun renameCategory(category: Category, newName: String) {
-        categoryDao.update(category.copy(name = newName.trim()))
+    suspend fun updateCategory(category: Category, newName: String, newColor: Int): Result<Unit> = runCatching {
+        val trimmed = newName.trim()
+        if (trimmed.isEmpty()) error("Le nom ne peut pas être vide")
+        categoryDao.update(category.copy(name = trimmed, color = newColor))
     }
+
+    /**
+     * Supprime une catégorie ET toutes les sessions qui lui sont associées.
+     * Les deux suppressions sont faites dans une même transaction Room
+     * (withTransaction) : soit les deux réussissent, soit aucune n'est
+     * appliquée, pour ne jamais se retrouver avec des sessions orphelines
+     * si l'opération est interrompue en plein milieu.
+     */
+    suspend fun deleteCategory(category: Category): Result<Unit> = runCatching {
+        if (categoryDao.countAll() <= 1) {
+            error("Impossible de supprimer la dernière catégorie restante")
+        }
+        database.withTransaction {
+            sessionDao.deleteByCategoryId(category.id)
+            categoryDao.delete(category)
+        }
+    }
+
+    suspend fun countSessionsInCategory(categoryId: Long): Int = sessionDao.countByCategoryId(categoryId)
+    // Utilisé pour prévenir l'utilisateur ("X sessions seront supprimées")
+    // avant qu'il ne confirme la suppression d'une catégorie.
 
     // --- Chronomètre ----------------------------------------------------
 
@@ -132,7 +161,7 @@ class TimeTrackerRepository(
         val sessionsWithCategory = sessionDao.observeAllWithCategory().first()
         val payload = BackupPayload(
             exportedAtEpochMillis = Instant.now().toEpochMilli(),
-            categories = categories.map { CategoryBackup(name = it.name) },
+            categories = categories.map { CategoryBackup(name = it.name, color = it.color) },
             sessions = sessionsWithCategory.map {
                 SessionBackup(
                     name = it.session.name,
@@ -161,15 +190,19 @@ class TimeTrackerRepository(
         val categoryIdByName = mutableMapOf<String, Long>()
         var categoriesCreated = 0
 
-        suspend fun resolveCategoryId(name: String): Long {
+        suspend fun resolveCategoryId(name: String, color: Int = Category.DEFAULT_COLOR): Long {
             categoryIdByName[name]?.let { return it }
             val existing = categoryDao.getByName(name)
-            val id = existing?.id ?: categoryDao.insert(Category(name = name)).also { categoriesCreated++ }
+            // La couleur du JSON n'est appliquée qu'à la création d'une
+            // nouvelle catégorie ; si elle existe déjà localement, sa couleur
+            // actuelle (potentiellement déjà personnalisée) n'est pas écrasée.
+            val id = existing?.id
+                ?: categoryDao.insert(Category(name = name, color = color)).also { categoriesCreated++ }
             categoryIdByName[name] = id
             return id
         }
 
-        payload.categories.forEach { resolveCategoryId(it.name) }
+        payload.categories.forEach { resolveCategoryId(it.name, it.color) }
         payload.sessions.forEach { backup ->
             val categoryId = resolveCategoryId(backup.categoryName)
             sessionDao.insert(

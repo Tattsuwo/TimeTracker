@@ -21,18 +21,36 @@ class SettingsViewModel(private val repository: TimeTrackerRepository) : ViewMod
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages
 
-    fun renameCategory(category: Category, newName: String) {
-        if (newName.isBlank()) return
-        viewModelScope.launch { repository.renameCategory(category, newName) }
-    }
-
-    fun addCategory(name: String) {
+    fun addCategory(name: String, color: Int) {
         viewModelScope.launch {
-            repository.addCategory(name).onFailure {
+            repository.addCategory(name, color).onFailure {
                 _messages.emit(it.message ?: "Impossible de créer la catégorie.")
             }
         }
     }
+
+    fun updateCategory(category: Category, newName: String, newColor: Int) {
+        viewModelScope.launch {
+            repository.updateCategory(category, newName, newColor).onFailure {
+                _messages.emit(it.message ?: "Impossible de modifier la catégorie.")
+            }
+        }
+    }
+
+    fun deleteCategory(category: Category) {
+        viewModelScope.launch {
+            repository.deleteCategory(category)
+                .onSuccess { _messages.emit("Catégorie « ${category.name} » supprimée.") }
+                .onFailure { _messages.emit(it.message ?: "Impossible de supprimer la catégorie.") }
+        }
+    }
+
+    /**
+     * Nombre de sessions actuellement rattachées à cette catégorie, pour
+     * prévenir l'utilisateur avant qu'il ne confirme une suppression
+     * (destructrice : ces sessions seront supprimées avec la catégorie).
+     */
+    suspend fun sessionCountFor(category: Category): Int = repository.countSessionsInCategory(category.id)
 
     /** Appelé avec l'Uri renvoyée par ACTION_CREATE_DOCUMENT (voir SettingsScreen). */
     fun exportTo(context: Context, uri: Uri) {

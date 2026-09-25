@@ -12,6 +12,20 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
+/**
+ * Petites icônes dessinées à la main avec Canvas plutôt qu'importées depuis
+ * androidx.compose.material:material-icons-extended : cette bibliothèque
+ * d'icônes a un cycle de publication indépendant des autres modules Compose
+ * (contrairement à ce qu'on pourrait supposer), ce qui la rend plus fragile
+ * à référencer par une version précise. Dessiner ces 4 pictogrammes très
+ * simples évite complètement ce risque de version, au prix d'un rendu plus
+ * basique qu'un vrai jeu d'icônes Material.
+ *
+ * Chacune lit LocalContentColor.current (comme le fait Icon() en interne) :
+ * la couleur s'adapte donc automatiquement à l'état sélectionné/non
+ * sélectionné géré par NavigationBarItem, sans code supplémentaire.
+ */
+
 @Composable
 fun TimerIcon(modifier: Modifier = Modifier) {
     val color = LocalContentColor.current
@@ -19,6 +33,7 @@ fun TimerIcon(modifier: Modifier = Modifier) {
         val stroke = size.minDimension * 0.09f
         val radius = size.minDimension / 2 - stroke
         drawCircle(color = color, radius = radius, style = Stroke(width = stroke))
+        // Aiguille du chrono, du centre vers le haut.
         drawLine(
             color = color,
             start = center,
@@ -28,6 +43,7 @@ fun TimerIcon(modifier: Modifier = Modifier) {
         )
     }
 }
+// Cercle + aiguille : symbolise le chronomètre.
 
 @Composable
 fun HistoryIcon(modifier: Modifier = Modifier) {
@@ -47,6 +63,7 @@ fun HistoryIcon(modifier: Modifier = Modifier) {
         }
     }
 }
+// Trois lignes de longueur décroissante : symbolise une liste/historique.
 
 @Composable
 fun SummaryIcon(modifier: Modifier = Modifier) {
@@ -67,6 +84,7 @@ fun SummaryIcon(modifier: Modifier = Modifier) {
         }
     }
 }
+// Trois barres de hauteur croissante : symbolise un graphique de synthèse.
 
 @Composable
 fun SettingsIcon(modifier: Modifier = Modifier) {
@@ -77,3 +95,4 @@ fun SettingsIcon(modifier: Modifier = Modifier) {
         drawCircle(color = color, radius = size.minDimension * 0.14f)
     }
 }
+// Anneau + point central : symbolise un réglage/molette.

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import java.time.Duration
 
 /** Une ligne de synthèse : un libellé (jour, activité ou catégorie) et son total. */
-data class TotalRow(val label: String, val total: Duration)
+data class TotalRow(val label: String, val total: Duration, val color: Int? = null)
 
 private fun sumDuration(sessions: List<SessionWithCategory>): Duration =
     sessions.fold(Duration.ZERO) { acc, item ->
@@ -46,7 +46,7 @@ class SummaryViewModel(repository: TimeTrackerRepository) : ViewModel() {
     val byCategory: StateFlow<List<TotalRow>> = repository.observeSessions()
         .map { sessions ->
             sessions.groupBy { it.categoryName }
-                .map { (name, group) -> TotalRow(name, sumDuration(group)) }
+                .map { (name, group) -> TotalRow(name, sumDuration(group), color = group.first().categoryColor) }
                 .sortedByDescending { it.total }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())

@@ -37,7 +37,8 @@ fun CategoryDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
-    val selectedName = categories.firstOrNull { it.id == selectedCategoryId }?.name.orEmpty()
+    val selectedCategory = categories.firstOrNull { it.id == selectedCategoryId }
+    val selectedName = selectedCategory?.name.orEmpty()
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -49,6 +50,11 @@ fun CategoryDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text("Catégorie") },
+            leadingIcon = {
+                if (selectedCategory != null) {
+                    CategoryColorDot(androidx.compose.ui.graphics.Color(selectedCategory.color))
+                }
+            },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
         )
@@ -59,6 +65,7 @@ fun CategoryDropdown(
             categories.forEach { category ->
                 DropdownMenuItem(
                     text = { Text(category.name) },
+                    leadingIcon = { CategoryColorDot(androidx.compose.ui.graphics.Color(category.color)) },
                     onClick = {
                         onCategorySelected(category)
                         expanded = false

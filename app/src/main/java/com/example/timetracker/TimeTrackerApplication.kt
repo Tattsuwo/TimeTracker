@@ -16,6 +16,7 @@ class TimeTrackerApplication : Application() {
     val repository: TimeTrackerRepository by lazy {
         val database = AppDatabase.getInstance(this)
         TimeTrackerRepository(
+            database = database,
             categoryDao = database.categoryDao(),
             sessionDao = database.sessionDao(),
             activeTimerDao = database.activeTimerDao()

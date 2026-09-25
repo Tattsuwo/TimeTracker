@@ -64,9 +64,18 @@ fun SummaryScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(row.label, style = MaterialTheme.typography.bodyLarge)
+                        androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (row.color != null) {
+                                com.example.timetracker.ui.common.CategoryColorDot(
+                                    color = androidx.compose.ui.graphics.Color(row.color),
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                            }
+                            Text(row.label, style = MaterialTheme.typography.bodyLarge)
+                        }
                         Text(row.total.toDisplayString(), style = MaterialTheme.typography.bodyLarge)
                     }
                     HorizontalDivider()

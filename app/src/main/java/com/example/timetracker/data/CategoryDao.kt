@@ -27,9 +27,10 @@ interface CategoryDao {
 
     @Delete
     suspend fun delete(category: Category)
-    // Supprime une catégorie (interdit en pratique si des sessions la
-    // référencent encore, à cause de la contrainte RESTRICT sur la clé
-    // étrangère de Session).
+    // Supprime la catégorie elle-même. Toujours appelée par le repository
+    // APRÈS avoir supprimé ses sessions via SessionDao.deleteByCategoryId :
+    // la suppression en cascade se fait donc côté application (dans une
+    // transaction), pas via une contrainte de clé étrangère en base.
 
     @Query("SELECT COUNT(*) FROM categories WHERE name = :name")
     suspend fun countByName(name: String): Int
@@ -39,4 +40,9 @@ interface CategoryDao {
     suspend fun getByName(name: String): Category?
     // Utilisé lors d'une restauration JSON pour relier chaque session
     // importée à la catégorie locale du même nom (voir Repository.importFromJson).
+
+    @Query("SELECT COUNT(*) FROM categories")
+    suspend fun countAll(): Int
+    // Utilisé pour empêcher de supprimer la toute dernière catégorie
+    // restante (il en faut au moins une pour pouvoir nommer une session).
 }

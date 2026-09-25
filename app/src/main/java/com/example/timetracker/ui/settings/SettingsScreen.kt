@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -26,11 +28,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timetracker.data.Category
+import com.example.timetracker.ui.common.CATEGORY_COLOR_PALETTE
+import com.example.timetracker.ui.common.CategoryColorDot
+import com.example.timetracker.ui.common.ColorPickerRow
 import com.example.timetracker.ui.rememberTimeTrackerViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,10 +47,21 @@ fun SettingsScreen() {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    var editingCategory by remember { mutableStateOf<Category?>(null) }
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var categoryBeingEdited by remember { mutableStateOf<Category?>(null) }
+    var categoryPendingDelete by remember { mutableStateOf<Category?>(null) }
+    var pendingDeleteSessionCount by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
+    }
+
+    // Récupère le nombre de sessions concernées dès qu'une suppression est
+    // demandée, pour l'afficher dans la boîte de dialogue de confirmation.
+    LaunchedEffect(categoryPendingDelete) {
+        val category = categoryPendingDelete
+        pendingDeleteSessionCount = if (category != null) viewModel.sessionCountFor(category) else null
     }
 
     // ACTION_CREATE_DOCUMENT / ACTION_OPEN_DOCUMENT (Storage Access Framework) :
@@ -74,13 +92,24 @@ fun SettingsScreen() {
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
 
-            Text("Catégories", style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+            ) {
+                Text("Catégories", style = MaterialTheme.typography.titleLarge)
+                Button(onClick = { showAddDialog = true }) { Text("+ Ajouter") }
+            }
+
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(categories, key = { it.id }) { category ->
                     ListItem(
+                        leadingContent = { CategoryColorDot(Color(category.color)) },
                         headlineContent = { Text(category.name) },
                         trailingContent = {
-                            TextButton(onClick = { editingCategory = category }) { Text("Renommer") }
+                            Row {
+                                TextButton(onClick = { categoryBeingEdited = category }) { Text("Modifier") }
+                                TextButton(onClick = { categoryPendingDelete = category }) { Text("Supprimer") }
+                            }
                         }
                     )
                 }
@@ -88,29 +117,94 @@ fun SettingsScreen() {
         }
     }
 
-    editingCategory?.let { category ->
-        RenameCategoryDialog(
-            category = category,
-            onDismiss = { editingCategory = null },
-            onConfirm = { newName ->
-                viewModel.renameCategory(category, newName)
-                editingCategory = null
+    if (showAddDialog) {
+        CategoryFormDialog(
+            title = "Nouvelle catégorie",
+            initialName = "",
+            initialColor = CATEGORY_COLOR_PALETTE.first(),
+            onDismiss = { showAddDialog = false },
+            onConfirm = { name, color ->
+                viewModel.addCategory(name, color.toArgb())
+                showAddDialog = false
+            }
+        )
+    }
+
+    categoryBeingEdited?.let { category ->
+        CategoryFormDialog(
+            title = "Modifier la catégorie",
+            initialName = category.name,
+            initialColor = Color(category.color),
+            onDismiss = { categoryBeingEdited = null },
+            onConfirm = { name, color ->
+                viewModel.updateCategory(category, name, color.toArgb())
+                categoryBeingEdited = null
+            }
+        )
+    }
+
+    categoryPendingDelete?.let { category ->
+        AlertDialog(
+            onDismissRequest = { categoryPendingDelete = null },
+            title = { Text("Supprimer « ${category.name} » ?") },
+            text = {
+                val count = pendingDeleteSessionCount
+                Text(
+                    when {
+                        count == null -> "Vérification des sessions concernées…"
+                        count == 0 -> "Aucune session n'est rattachée à cette catégorie."
+                        else -> "$count session(s) rattachée(s) à cette catégorie seront " +
+                            "également supprimées. Cette action est irréversible."
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteCategory(category)
+                    categoryPendingDelete = null
+                }) { Text("Supprimer") }
+            },
+            dismissButton = {
+                TextButton(onClick = { categoryPendingDelete = null }) { Text("Annuler") }
             }
         )
     }
 }
 
+/** Formulaire partagé par l'ajout et la modification d'une catégorie (nom + couleur). */
 @Composable
-private fun RenameCategoryDialog(category: Category, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var name by remember { mutableStateOf(category.name) }
-    androidx.compose.material3.AlertDialog(
+private fun CategoryFormDialog(
+    title: String,
+    initialName: String,
+    initialColor: Color,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, color: Color) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var color by remember { mutableStateOf(initialColor) }
+
+    AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Renommer la catégorie") },
+        title = { Text(title) },
         text = {
-            OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true)
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nom") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    "Couleur",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                )
+                ColorPickerRow(selectedColor = color, onColorSelected = { color = it })
+            }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name) }) { Text("Enregistrer") }
+            TextButton(onClick = { if (name.isNotBlank()) onConfirm(name, color) }) { Text("Enregistrer") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Annuler") }

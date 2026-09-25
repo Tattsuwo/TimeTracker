@@ -12,7 +12,7 @@ interface SessionDao {
 
     @Query(
         """
-        SELECT sessions.*, categories.name AS categoryName
+        SELECT sessions.*, categories.name AS categoryName, categories.color AS categoryColor
         FROM sessions
         INNER JOIN categories ON categories.id = sessions.categoryId
         ORDER BY sessions.startTime DESC
@@ -39,4 +39,15 @@ interface SessionDao {
 
     @Query("SELECT * FROM sessions WHERE id = :id")
     suspend fun getById(id: Long): Session?
+
+    @Query("DELETE FROM sessions WHERE categoryId = :categoryId")
+    suspend fun deleteByCategoryId(categoryId: Long)
+    // Suppression en cascade des sessions d'une catégorie : appelée par
+    // TimeTrackerRepository.deleteCategory() juste avant de supprimer la
+    // catégorie elle-même, dans une même transaction.
+
+    @Query("SELECT COUNT(*) FROM sessions WHERE categoryId = :categoryId")
+    suspend fun countByCategoryId(categoryId: Long): Int
+    // Utilisé pour prévenir l'utilisateur du nombre de sessions qui seront
+    // supprimées avant qu'il ne confirme la suppression d'une catégorie.
 }

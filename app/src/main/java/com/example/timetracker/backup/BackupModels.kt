@@ -1,5 +1,6 @@
 package com.example.timetracker.backup
 
+import com.example.timetracker.data.Category
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,8 +13,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class CategoryBackup(
-    val name: String
+    val name: String,
+    val color: Int = Category.DEFAULT_COLOR
 )
+// "color" a une valeur par défaut : un fichier JSON exporté par une version
+// antérieure de l'appli (sans ce champ) reste importable sans erreur.
 
 @Serializable
 data class SessionBackup(

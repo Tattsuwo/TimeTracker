@@ -10,8 +10,10 @@ android {
     // Changez ce namespace / applicationId avant de publier ou d'installer
     // durablement l'application (il identifie l'app sur l'appareil).
     namespace = "com.example.timetracker"
-    // A VERIFIER : 36 correspond à Android 16, la version stable la plus
-    // récente au moment de la génération (source : developer.android.com/about/versions/16/setup-sdk).
+    // CORRIGÉ (24/09) : Compose 1.12.1 exige de compiler contre l'API 37
+    // (message d'erreur "checkDebugAarMetadata" à la compilation). L'API 37
+    // correspond à Android 17, stable depuis juin 2026.
+    // Source : https://developer.android.com/about/versions/17/setup-sdk
     compileSdk = 37
 
     defaultConfig {

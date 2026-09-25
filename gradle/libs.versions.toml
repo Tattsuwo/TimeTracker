@@ -14,8 +14,13 @@
 kotlin = "2.4.20"
 # Vérifiée (developer.android.com/build/releases, sept. 2026)
 agp = "9.4.0"
-# A VERIFIER : la version de KSP doit correspondre exactement à la version de
-# Kotlin ci-dessus (format "<version-kotlin>-<build-ksp>").
+# CORRIGÉ (24/09) : depuis la version 2.3.0, KSP a abandonné son ancien
+# format de version "<version-kotlin>-<build-ksp>" (ex. 2.4.20-1.0.30, qui
+# n'existe plus) : le numéro de version de KSP est maintenant indépendant de
+# celui de Kotlin. 2.3.11 est la dernière version publiée sur Maven Central
+# au moment de cette correction et fonctionne avec Kotlin 2.2.* et plus
+# récent, donc avec Kotlin 2.4.20 ci-dessus.
+# Vérifier malgré tout ici avant de builder si une version plus récente est sortie :
 # https://github.com/google/ksp/releases
 ksp = "2.3.11"
 # Vérifiée (developer.android.com/jetpack/androidx/releases/room, nov. 2025)
@@ -56,7 +61,6 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

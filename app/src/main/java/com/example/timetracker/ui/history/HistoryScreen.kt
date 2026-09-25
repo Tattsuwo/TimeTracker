@@ -23,10 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timetracker.data.SessionWithCategory
+import com.example.timetracker.ui.common.CategoryColorDot
 import com.example.timetracker.ui.rememberTimeTrackerViewModelFactory
 import com.example.timetracker.util.durationBetween
 import com.example.timetracker.util.toDisplayString
@@ -104,7 +106,11 @@ private fun SessionRow(item: SessionWithCategory, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(session.name, style = MaterialTheme.typography.titleMedium)
-                AssistChip(onClick = {}, label = { Text(item.categoryName) })
+                AssistChip(
+                    onClick = {},
+                    label = { Text(item.categoryName) },
+                    leadingIcon = { CategoryColorDot(Color(item.categoryColor)) }
+                )
             }
             if (session.description.isNotBlank()) {
                 Text(session.description, style = MaterialTheme.typography.bodyMedium)

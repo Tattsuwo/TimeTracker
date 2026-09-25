@@ -6,25 +6,37 @@ Android Studio (File > Open > sélectionner le dossier `TimeTracker`).
 
 ## Avant le premier build
 
-1. **Vérifier les versions** dans `gradle/libs.versions.toml`. Certaines sont
-   marquées `A VERIFIER` (KSP, lifecycle, navigation-compose) : ouvrez le lien
-   indiqué en commentaire et reportez la dernière version stable. Les autres
-   ont été vérifiées sur la documentation officielle au moment de la
-   génération (septembre 2026) mais l'écosystème Kotlin/Compose évolue vite —
-   recontrôlez-les si vous ouvrez ce projet plusieurs semaines après.
-2. **Renommer le package / applicationId** : `com.example.timetracker` dans
+1. **Wrapper Gradle** : `gradle/wrapper/gradle-wrapper.properties` fixe la
+   version de Gradle à 9.6.0 (version minimale et par défaut exigée par AGP
+   9.4.0, voir `app/build.gradle.kts`). Si Android Studio réclame malgré tout
+   une autre version au moment du sync, vérifiez la table de compatibilité
+   AGP/Gradle correspondant à la version d'AGP réellement utilisée :
+   https://developer.android.com/build/releases/agp-9-4-0-release-notes
+2. **Kotlin "built-in"** : AGP 9+ compile Kotlin lui-même et n'accepte plus le
+   plugin `org.jetbrains.kotlin.android` appliqué séparément (il a été retiré
+   des deux `build.gradle.kts`). La version de Kotlin utilisée par ce
+   compilateur intégré est forcée à 2.4.20 par un bloc `buildscript` en tête
+   du `build.gradle.kts` racine, pour rester cohérente avec les autres
+   plugins Kotlin du projet. Voir
+   https://developer.android.com/build/migrate-to-built-in-kotlin
+3. **Vérifier les versions** dans `gradle/libs.versions.toml`. Certaines sont
+   marquées `A VERIFIER` (lifecycle, navigation-compose) : ouvrez le lien
+   indiqué en commentaire et reportez la dernière version stable. KSP a déjà
+   été corrigé une fois (2.3.11) suite à un changement de son schéma de
+   version, indépendant de celui de Kotlin depuis KSP 2.3.0 — vérifiez-le
+   aussi si plusieurs semaines se sont écoulées depuis la génération.
+4. **Renommer le package / applicationId** : `com.example.timetracker` dans
    `app/build.gradle.kts` et dans l'arborescence
    `app/src/main/java/com/example/timetracker/` (Android Studio propose un
    refactoring automatique : clic droit sur le package > Refactor > Rename).
-3. **Remplacer l'icône de lanceur** : les fichiers dans
+5. **Remplacer l'icône de lanceur** : les fichiers dans
    `app/src/main/res/mipmap-*` et `res/drawable/ic_launcher_*.xml` sont des
    placeholders générés automatiquement (un simple pictogramme d'horloge).
    Clic droit sur `res/` > New > Image Asset pour les remplacer proprement.
-4. Ce projet n'a jamais été compilé dans cet environnement (pas d'accès
+6. Ce projet n'a jamais été compilé dans cet environnement (pas d'accès
    réseau ni de SDK Android disponibles ici pour lancer Gradle) : la première
-   synchronisation Gradle dans Android Studio peut faire remonter un
-   ajustement mineur de version, notamment sur KSP qui doit correspondre
-   exactement à la version de Kotlin.
+   synchronisation Gradle dans Android Studio peut faire remonter d'autres
+   ajustements mineurs de version que je n'aurais pas anticipés.
 
 ## Architecture en un coup d'œil
 
@@ -55,13 +67,16 @@ Android Studio (File > Open > sélectionner le dossier `TimeTracker`).
 - Nommage de la session à l'arrêt (nom, description, catégorie), catégories
   par défaut + création à la volée.
 - Historique modifiable/supprimable, groupé par jour avec total par jour.
+- Catégories : couleur personnalisable (palette fixe), ajout depuis les
+  Réglages ou à la volée pendant l'arrêt d'un chrono, suppression en cascade
+  (avec confirmation et décompte des sessions concernées).
 - Synthèse par jour / par activité / par catégorie.
 - Export et restauration JSON via le sélecteur de fichiers système.
 - Heures en 24h, durées en heures et minutes.
 
 ## Pistes d'évolution volontairement laissées de côté
 
-- Suppression de catégorie (bloquée tant que des sessions la référencent :
-  contrainte `RESTRICT` sur la clé étrangère).
 - Détection de doublons à l'import JSON (l'import est additif).
 - Filtrage par période dans la synthèse (aujourd'hui/7 jours/tout).
+- Palette de couleurs fixe (10 teintes) plutôt qu'un sélecteur libre type roue
+  HSV, pour rester simple et sans dépendance externe.
