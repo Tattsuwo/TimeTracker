@@ -57,7 +57,7 @@ fun StopSessionDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nom de l'activité") },
+                    label = { Text("Projet") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )

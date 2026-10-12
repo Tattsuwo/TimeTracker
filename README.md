@@ -100,7 +100,7 @@ dérailler la compilation :
   supprimables. Chaque jour est repliable individuellement (clic sur l'en-tête),
   avec un bouton "Tout fermer / Tout ouvrir" pour basculer tous les jours
   d'un coup.
-- Synthèse par jour / par activité / par catégorie.
+- Synthèse par jour / par projet / par catégorie.
 - Export et import JSON via le sélecteur de fichiers système : l'import
   **remplace entièrement** les données existantes (sessions + catégories) par
   le contenu du fichier, avec confirmation avant de le lancer (pas de fusion :

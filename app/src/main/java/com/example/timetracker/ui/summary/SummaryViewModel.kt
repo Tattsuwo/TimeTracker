@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.Duration
 
-/** Une ligne de synthèse : un libellé (jour, activité ou catégorie) et son total. */
+/** Une ligne de synthèse : un libellé (jour, projet ou catégorie) et son total. */
 data class TotalRow(val label: String, val total: Duration, val color: Int? = null)
 
 private fun sumDuration(sessions: List<SessionWithCategory>): Duration =

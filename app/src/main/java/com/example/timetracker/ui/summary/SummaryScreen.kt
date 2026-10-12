@@ -25,7 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timetracker.ui.rememberTimeTrackerViewModelFactory
 import com.example.timetracker.util.toDisplayString
 
-private val TAB_TITLES = listOf("Par jour", "Par activité", "Par catégorie")
+private val TAB_TITLES = listOf("Par jour", "Par projet", "Par catégorie")
 
 @Composable
 fun SummaryScreen() {

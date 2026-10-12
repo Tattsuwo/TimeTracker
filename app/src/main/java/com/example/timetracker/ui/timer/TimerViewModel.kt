@@ -99,7 +99,7 @@ class TimerViewModel(private val application: TimeTrackerApplication) : ViewMode
     fun onConfirmStop(name: String, description: String, categoryId: Long, endTime: Instant) {
         viewModelScope.launch {
             if (name.isBlank()) {
-                _userMessages.emit("Le nom de l'activité est obligatoire.")
+                _userMessages.emit("Le projet est obligatoire.")
                 return@launch
             }
             repository.stopTimerAndSaveSession(name, description, categoryId, endTime)
@@ -117,7 +117,7 @@ class TimerViewModel(private val application: TimeTrackerApplication) : ViewMode
     ) {
         viewModelScope.launch {
             if (name.isBlank()) {
-                _userMessages.emit("Le nom de l'activité est obligatoire.")
+                _userMessages.emit("Le projet est obligatoire.")
                 return@launch
             }
             repository.closeInterruptedSession(active, name, description, categoryId, endTime)
