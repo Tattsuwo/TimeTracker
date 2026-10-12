@@ -15,16 +15,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.timetracker.data.Category
+import com.example.timetracker.data.Project
 import com.example.timetracker.data.Session
 import com.example.timetracker.ui.common.CategoryDropdown
 import com.example.timetracker.ui.common.DateTimePickerField
+import com.example.timetracker.ui.common.ProjectDropdown
 
 @Composable
 fun EditSessionDialog(
     session: Session,
     categories: List<Category>,
+    projects: List<Project>,
     onDismiss: () -> Unit,
     onAddCategory: (String) -> Unit,
+    onAddProject: (String) -> Unit,
     onConfirm: (Session) -> Unit,
     onDelete: (Session) -> Unit
 ) {
@@ -40,11 +44,11 @@ fun EditSessionDialog(
         title = { Text("Modifier la session") },
         text = {
             Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Projet") },
-                    singleLine = true,
+                ProjectDropdown(
+                    projects = projects,
+                    selectedName = name,
+                    onProjectSelected = { name = it },
+                    onAddProject = onAddProject,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(

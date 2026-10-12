@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.timetracker.TimeTrackerApplication
 import com.example.timetracker.data.ActiveTimer
 import com.example.timetracker.data.Category
+import com.example.timetracker.data.Project
 import com.example.timetracker.service.TimerForegroundService
 import com.example.timetracker.util.durationBetween
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,12 +29,22 @@ data class TimerUiState(
     val activeTimer: ActiveTimer? = null,
     val elapsed: Duration = Duration.ZERO,
     val categories: List<Category> = emptyList(),
+    val projects: List<Project> = emptyList(),
     // true seulement si un chrono était déjà actif AU LANCEMENT de l'appli
     // alors que le service n'était pas en cours d'exécution : signe que la
     // session a été interrompue (redémarrage du téléphone, appli tuée...)
     // plutôt qu'un simple retour normal sur l'écran. Voir le commentaire sur
     // TimerForegroundService.isRunning.
     val isInterruptedRecovery: Boolean = false
+)
+
+// Les quatre sources dont dépend l'état de l'écran, réunies dans une seule
+// valeur (combine ne fournit pas de Quadruple prêt à l'emploi comme Triple).
+private data class TimerInputs(
+    val active: ActiveTimer?,
+    val categories: List<Category>,
+    val projects: List<Project>,
+    val interrupted: Boolean
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -70,18 +81,21 @@ class TimerViewModel(private val application: TimeTrackerApplication) : ViewMode
         combine(
             repository.observeActiveTimer(),
             repository.observeCategories(),
+            repository.observeProjects(),
             interruptedAtLaunch
-        ) { active, categories, interrupted -> Triple(active, categories, interrupted) }
-            .flatMapLatest { (active, categories, interrupted) ->
+        ) { active, categories, projects, interrupted -> TimerInputs(active, categories, projects, interrupted) }
+            .flatMapLatest { inputs ->
+                val active = inputs.active
                 if (active == null) {
-                    flowOf(TimerUiState(categories = categories))
+                    flowOf(TimerUiState(categories = inputs.categories, projects = inputs.projects))
                 } else {
                     secondTicker().map {
                         TimerUiState(
                             activeTimer = active,
                             elapsed = durationBetween(active.startTime, Instant.now()),
-                            categories = categories,
-                            isInterruptedRecovery = interrupted
+                            categories = inputs.categories,
+                            projects = inputs.projects,
+                            isInterruptedRecovery = inputs.interrupted
                         )
                     }
                 }
@@ -123,6 +137,14 @@ class TimerViewModel(private val application: TimeTrackerApplication) : ViewMode
             repository.closeInterruptedSession(active, name, description, categoryId, endTime)
                 .onSuccess { interruptedAtLaunch.value = false }
                 .onFailure { _userMessages.emit("Impossible d'enregistrer la session.") }
+        }
+    }
+
+    fun onAddProject(name: String) {
+        viewModelScope.launch {
+            repository.addProject(name).onFailure {
+                _userMessages.emit(it.message ?: "Impossible de créer le projet.")
+            }
         }
     }
 

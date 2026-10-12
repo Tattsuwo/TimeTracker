@@ -60,8 +60,12 @@ dérailler la compilation :
 ## Architecture en un coup d'œil
 
 - `data/` : entités Room (`Category` avec sa couleur, `Session`,
-  `ActiveTimer`), DAO, `AppDatabase` (version 2, avec une vraie migration
-  1→2 pour l'ajout de la couleur — pas de réinitialisation destructrice).
+  `ActiveTimer`, `Project`), DAO, `AppDatabase` (version 3, avec de vraies
+  migrations 1→2 pour l'ajout de la couleur et 2→3 pour la liste des projets
+  — pas de réinitialisation destructrice). `Project` ne sert qu'à mémoriser
+  la liste des projets proposés : chaque session garde le NOM de son projet
+  dans `Session.name` (la table `sessions` n'a donc pas été modifiée par la
+  migration 2→3, qui crée la liste à partir des noms déjà utilisés).
   Voir les commentaires de `Session.kt` et `ActiveTimer.kt` pour le choix de
   conception clé : le chrono "en cours" est une table séparée de "sessions",
   qui ne contient elle que des sessions terminées.
@@ -90,8 +94,12 @@ dérailler la compilation :
 - Notification persistante + permission `POST_NOTIFICATIONS` (Android 13+).
 - Détection d'une session laissée ouverte après un redémarrage du téléphone,
   avec clôture manuelle par l'utilisateur (pas de reprise automatique).
-- Nommage de la session à l'arrêt (nom, description, catégorie), catégories
-  par défaut + création à la volée.
+- Enregistrement de la session à l'arrêt (projet, description, catégorie),
+  catégories par défaut + création à la volée.
+- Projet choisi dans une liste déroulante (comme la catégorie), avec ajout
+  d'un nouveau projet à la volée via « + Nouveau projet » (doublons refusés
+  sans tenir compte des majuscules). Pas encore de renommage ni de suppression
+  d'un projet de la liste.
 - Catégories : couleur personnalisable (palette fixe de 10 teintes), ajout
   depuis les Réglages ou à la volée pendant l'arrêt d'un chrono, modification,
   suppression en cascade de ses sessions (avec confirmation et décompte des

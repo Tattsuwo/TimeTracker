@@ -16,8 +16,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.timetracker.data.Category
+import com.example.timetracker.data.Project
 import com.example.timetracker.ui.common.CategoryDropdown
 import com.example.timetracker.ui.common.DateTimePickerField
+import com.example.timetracker.ui.common.ProjectDropdown
 import java.time.Instant
 
 /**
@@ -30,13 +32,16 @@ import java.time.Instant
 @Composable
 fun StopSessionDialog(
     categories: List<Category>,
+    projects: List<Project>,
     initialEndTime: Instant,
     allowEditingEndTime: Boolean,
     onDismiss: () -> Unit,
     onAddCategory: (String) -> Unit,
+    onAddProject: (String) -> Unit,
     onConfirm: (name: String, description: String, categoryId: Long, endTime: Instant) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
+    // Nom du projet choisi dans la liste (vide tant que rien n'est sélectionné).
+    var projectName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
     var endTime by remember { mutableStateOf(initialEndTime) }
@@ -51,14 +56,14 @@ fun StopSessionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (allowEditingEndTime) "Clôturer la session" else "Nommer la session") },
+        title = { Text(if (allowEditingEndTime) "Clôturer la session" else "Enregistrer la session") },
         text = {
             Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Projet") },
-                    singleLine = true,
+                ProjectDropdown(
+                    projects = projects,
+                    selectedName = projectName,
+                    onProjectSelected = { projectName = it },
+                    onAddProject = onAddProject,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -86,11 +91,15 @@ fun StopSessionDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                selectedCategoryId?.let { categoryId ->
-                    onConfirm(name, description, categoryId, endTime)
+            // Désactivé tant qu'un projet n'est pas choisi : le projet est obligatoire.
+            TextButton(
+                enabled = projectName.isNotBlank(),
+                onClick = {
+                    selectedCategoryId?.let { categoryId ->
+                        onConfirm(projectName, description, categoryId, endTime)
+                    }
                 }
-            }) { Text("Enregistrer") }
+            ) { Text("Enregistrer") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Annuler") }

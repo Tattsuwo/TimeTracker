@@ -3,6 +3,7 @@ package com.example.timetracker.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timetracker.data.Category
+import com.example.timetracker.data.Project
 import com.example.timetracker.data.Session
 import com.example.timetracker.data.SessionWithCategory
 import com.example.timetracker.repository.TimeTrackerRepository
@@ -26,6 +27,9 @@ data class DayGroup(
 class HistoryViewModel(private val repository: TimeTrackerRepository) : ViewModel() {
 
     val categories: StateFlow<List<Category>> = repository.observeCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val projects: StateFlow<List<Project>> = repository.observeProjects()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val dayGroups: StateFlow<List<DayGroup>> = repository.observeSessions()
@@ -60,5 +64,9 @@ class HistoryViewModel(private val repository: TimeTrackerRepository) : ViewMode
 
     fun addCategory(name: String) {
         viewModelScope.launch { repository.addCategory(name) }
+    }
+
+    fun addProject(name: String) {
+        viewModelScope.launch { repository.addProject(name) }
     }
 }

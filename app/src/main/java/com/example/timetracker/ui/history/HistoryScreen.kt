@@ -45,6 +45,7 @@ fun HistoryScreen() {
     val viewModel: HistoryViewModel = viewModel(factory = rememberTimeTrackerViewModelFactory())
     val dayGroups by viewModel.dayGroups.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val projects by viewModel.projects.collectAsStateWithLifecycle()
     var editingSession by remember { mutableStateOf<SessionWithCategory?>(null) }
 
     // Jours actuellement repliés (leurs sessions sont masquées, seul l'en-tête
@@ -107,8 +108,10 @@ fun HistoryScreen() {
         EditSessionDialog(
             session = current.session,
             categories = categories,
+            projects = projects,
             onDismiss = { editingSession = null },
             onAddCategory = viewModel::addCategory,
+            onAddProject = viewModel::addProject,
             onConfirm = { updated ->
                 viewModel.updateSession(updated)
                 editingSession = null

@@ -19,6 +19,7 @@ class TimeTrackerApplication : Application() {
             database = database,
             categoryDao = database.categoryDao(),
             sessionDao = database.sessionDao(),
+            projectDao = database.projectDao(),
             activeTimerDao = database.activeTimerDao()
         )
     }

@@ -10,6 +10,8 @@ import com.example.timetracker.data.ActiveTimerDao
 import com.example.timetracker.data.AppDatabase
 import com.example.timetracker.data.Category
 import com.example.timetracker.data.CategoryDao
+import com.example.timetracker.data.Project
+import com.example.timetracker.data.ProjectDao
 import com.example.timetracker.data.Session
 import com.example.timetracker.data.SessionDao
 import com.example.timetracker.data.SessionWithCategory
@@ -33,6 +35,7 @@ class TimeTrackerRepository(
     private val database: AppDatabase,
     private val categoryDao: CategoryDao,
     private val sessionDao: SessionDao,
+    private val projectDao: ProjectDao,
     private val activeTimerDao: ActiveTimerDao,
     private val backupManager: BackupManager = BackupManager(),
     private val excelExporter: ExcelExporter = ExcelExporter()
@@ -82,6 +85,22 @@ class TimeTrackerRepository(
     suspend fun countSessionsInCategory(categoryId: Long): Int = sessionDao.countByCategoryId(categoryId)
     // Utilisé pour prévenir l'utilisateur ("X sessions seront supprimées")
     // avant qu'il ne confirme la suppression d'une catégorie.
+
+    // --- Projets ------------------------------------------------------
+
+    fun observeProjects(): Flow<List<Project>> = projectDao.observeAll()
+
+    /**
+     * Ajoute un projet à la liste déroulante. Refuse un nom vide ou déjà
+     * présent (sans tenir compte des majuscules : "compta" et "Compta" sont le
+     * même projet), pour éviter les quasi-doublons dans le menu.
+     */
+    suspend fun addProject(name: String): Result<Long> = runCatching {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) error("Le nom du projet ne peut pas être vide")
+        if (projectDao.countByNameIgnoreCase(trimmed) > 0) error("Ce projet existe déjà")
+        projectDao.insert(Project(name = trimmed))
+    }
 
     // --- Chronomètre ----------------------------------------------------
 
@@ -166,6 +185,7 @@ class TimeTrackerRepository(
         val payload = BackupPayload(
             exportedAtEpochMillis = Instant.now().toEpochMilli(),
             categories = categories.map { CategoryBackup(name = it.name, color = it.color) },
+            projects = projectDao.observeAll().first().map { it.name },
             sessions = sessionsWithCategory.map {
                 SessionBackup(
                     name = it.session.name,
@@ -201,6 +221,7 @@ class TimeTrackerRepository(
         database.withTransaction {
             sessionDao.deleteAll()
             categoryDao.deleteAll()
+            projectDao.deleteAll()
 
             val categoryIdByName = mutableMapOf<String, Long>()
 
@@ -224,6 +245,15 @@ class TimeTrackerRepository(
                     )
                 )
             }
+
+            // Liste des projets : ceux du fichier, plus tout nom utilisé par une
+            // session mais absent de cette liste (fichier exporté avant
+            // l'existence de la liste des projets) : ainsi chaque session
+            // retrouve toujours son projet dans le menu.
+            (payload.projects + payload.sessions.map { it.name })
+                .filter { it.isNotBlank() }
+                .distinct()
+                .forEach { projectDao.insert(Project(name = it)) }
 
             ImportSummary(categoriesCreated = categoryIdByName.size, sessionsImported = payload.sessions.size)
         }

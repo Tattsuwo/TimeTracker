@@ -46,9 +46,27 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+/**
+ * Migration 2 -> 3 : ajout de la table "projects" (liste déroulante des
+ * projets). La table "sessions" n'est PAS modifiée. La liste est remplie avec
+ * les noms de projet déjà utilisés par les sessions existantes, pour que le
+ * menu les propose immédiatement après la mise à jour de l'appli.
+ *
+ * Le CREATE TABLE reprend exactement la forme que Room génère pour l'entité
+ * [Project] (voir les createSql du fichier app/schemas/.../3.json produit au
+ * build) : Room vérifie après migration que la structure réelle correspond à
+ * celle attendue, et refuse de démarrer si ce n'est pas le cas.
+ */
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `projects` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)")
+        db.execSQL("INSERT INTO projects (name) SELECT DISTINCT name FROM sessions")
+    }
+}
+
 @Database(
-    entities = [Category::class, Session::class, ActiveTimer::class],
-    version = 2,
+    entities = [Category::class, Session::class, ActiveTimer::class, Project::class],
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -57,6 +75,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun sessionDao(): SessionDao
     abstract fun activeTimerDao(): ActiveTimerDao
+    abstract fun projectDao(): ProjectDao
 
     companion object {
         @Volatile
@@ -75,7 +94,7 @@ abstract class AppDatabase : RoomDatabase() {
                 AppDatabase::class.java,
                 "timetracker.db"
             )
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)

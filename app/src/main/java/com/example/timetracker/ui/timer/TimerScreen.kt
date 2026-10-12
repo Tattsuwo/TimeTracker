@@ -93,10 +93,12 @@ fun TimerScreen() {
     if (showStopDialog && uiState.activeTimer != null) {
         StopSessionDialog(
             categories = uiState.categories,
+            projects = uiState.projects,
             initialEndTime = Instant.now(),
             allowEditingEndTime = uiState.isInterruptedRecovery,
             onDismiss = { showStopDialog = false },
             onAddCategory = viewModel::onAddCategory,
+            onAddProject = viewModel::onAddProject,
             onConfirm = { name, description, categoryId, endTime ->
                 val currentActive = uiState.activeTimer ?: return@StopSessionDialog
                 if (uiState.isInterruptedRecovery) {

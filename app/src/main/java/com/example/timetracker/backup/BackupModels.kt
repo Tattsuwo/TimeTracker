@@ -33,5 +33,9 @@ data class BackupPayload(
     val formatVersion: Int = 1,
     val exportedAtEpochMillis: Long,
     val categories: List<CategoryBackup>,
-    val sessions: List<SessionBackup>
+    val sessions: List<SessionBackup>,
+    // Noms des projets de la liste déroulante. Valeur par défaut vide : un
+    // fichier exporté avant l'existence de cette liste reste importable (les
+    // projets sont alors reconstitués à partir des noms utilisés par les sessions).
+    val projects: List<String> = emptyList()
 )
