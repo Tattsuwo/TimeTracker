@@ -41,6 +41,14 @@ class BackupManager {
         }
     // Dispatchers.IO : écriture disque, ne doit jamais bloquer le thread principal.
 
+    suspend fun writeBytesToUri(context: Context, uri: Uri, bytes: ByteArray) =
+        withContext(Dispatchers.IO) {
+            context.contentResolver.openOutputStream(uri)?.use { output ->
+                output.write(bytes)
+            } ?: error("Impossible d'ouvrir le fichier de destination")
+        }
+    // Même principe que writeToUri, mais pour un contenu binaire (fichier Excel .xlsx).
+
     suspend fun readFromUri(context: Context, uri: Uri): String =
         withContext(Dispatchers.IO) {
             context.contentResolver.openInputStream(uri)?.use { input ->

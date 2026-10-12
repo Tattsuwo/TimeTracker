@@ -73,7 +73,9 @@ dérailler la compilation :
   un chronomètre depuis Android 14).
 - `backup/` : modèles sérialisables (avec la couleur des catégories) +
   lecture/écriture via le Storage Access Framework (aucune permission de
-  stockage nécessaire).
+  stockage nécessaire) + `ExcelExporter`, qui produit un classeur `.xlsx`
+  sans dépendance externe (un .xlsx est une archive ZIP de fichiers XML,
+  générée avec `java.util.zip`).
 - `ui/` : un dossier par écran (`timer`, `history`, `summary`, `settings`),
   plus `theme/`, `navigation/` et `common/` (composants partagés : sélecteur
   de catégorie, sélecteur date/heure, palette et pastilles de couleur, icônes
@@ -105,6 +107,11 @@ dérailler la compilation :
   **remplace entièrement** les données existantes (sessions + catégories) par
   le contenu du fichier, avec confirmation avant de le lancer (pas de fusion :
   on repart proprement sur la version importée).
+- Export Excel (.xlsx) de toutes les sessions terminées, de la plus ancienne
+  à la plus récente, avec les colonnes Date | Heure début | Heure fin | Durée |
+  Projet | Description | Catégorie. Date (jj/mm/aaaa), heures et durée (hh:mm)
+  sont de vraies valeurs Excel (triables, filtrables, additionnables) et non
+  du texte ; la date est celle du début de la session.
 - Heures en 24h, durées en heures et minutes.
 
 ## Publier une version (APK + GitHub Release)

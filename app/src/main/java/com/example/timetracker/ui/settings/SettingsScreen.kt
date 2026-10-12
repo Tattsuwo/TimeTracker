@@ -2,7 +2,9 @@ package com.example.timetracker.ui.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -74,6 +76,13 @@ fun SettingsScreen() {
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri -> uri?.let { viewModel.exportTo(context, it) } }
 
+    // Même mécanisme (SAF) pour l'export Excel : seul le type de fichier change
+    // (MIME d'un classeur .xlsx), ce qui permet au sélecteur système de proposer
+    // le bon nom et la bonne extension.
+    val excelExportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    ) { uri -> uri?.let { viewModel.exportExcelTo(context, it) } }
+
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri -> uri?.let { viewModel.importFrom(context, it) } }
@@ -81,14 +90,28 @@ fun SettingsScreen() {
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
             Text("Sauvegarde", style = MaterialTheme.typography.titleLarge)
-            Row(modifier = Modifier.padding(top = 12.dp)) {
-                OutlinedButton(onClick = { exportLauncher.launch("sauvegarde-suivi-du-temps.json") }) {
-                    Text("Exporter")
-                }
+            // weight(1f) : les trois boutons se partagent la largeur à parts égales
+            // plutôt que d'avoir chacun la largeur de son texte, pour qu'ils
+            // restent sur une seule ligne même sur un écran étroit.
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { exportLauncher.launch("sauvegarde-suivi-du-temps.json") },
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
+                ) { Text("Exporter") }
                 OutlinedButton(
                     onClick = { showImportConfirmation = true },
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
                 ) { Text("Importer") }
+                OutlinedButton(
+                    onClick = { excelExportLauncher.launch("suivi-du-temps.xlsx") },
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
+                ) { Text("Export Excel") }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))

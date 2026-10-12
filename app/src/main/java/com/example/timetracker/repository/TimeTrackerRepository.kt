@@ -3,6 +3,7 @@ package com.example.timetracker.repository
 import com.example.timetracker.backup.BackupManager
 import com.example.timetracker.backup.BackupPayload
 import com.example.timetracker.backup.CategoryBackup
+import com.example.timetracker.backup.ExcelExporter
 import com.example.timetracker.backup.SessionBackup
 import com.example.timetracker.data.ActiveTimer
 import com.example.timetracker.data.ActiveTimerDao
@@ -13,8 +14,10 @@ import com.example.timetracker.data.Session
 import com.example.timetracker.data.SessionDao
 import com.example.timetracker.data.SessionWithCategory
 import androidx.room.withTransaction
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
 /** Résumé renvoyé après une restauration, affiché à l'utilisateur. */
@@ -31,7 +34,8 @@ class TimeTrackerRepository(
     private val categoryDao: CategoryDao,
     private val sessionDao: SessionDao,
     private val activeTimerDao: ActiveTimerDao,
-    private val backupManager: BackupManager = BackupManager()
+    private val backupManager: BackupManager = BackupManager(),
+    private val excelExporter: ExcelExporter = ExcelExporter()
 ) {
 
     // --- Catégories ---------------------------------------------------
@@ -228,6 +232,21 @@ class TimeTrackerRepository(
     /** Écrit l'export JSON complet dans le fichier choisi par l'utilisateur via le SAF. */
     suspend fun exportToUri(context: android.content.Context, uri: android.net.Uri): Result<Unit> =
         runCatching { backupManager.writeToUri(context, uri, exportAllToJson()) }
+
+    /**
+     * Écrit un fichier Excel (.xlsx) listant toutes les sessions terminées, de
+     * la plus ancienne à la plus récente, dans le fichier choisi via le SAF.
+     * Le chrono éventuellement en cours n'en fait pas partie (il n'est pas
+     * encore une session). La construction du classeur est faite hors du
+     * thread principal (Dispatchers.Default) : avec beaucoup de sessions, la
+     * génération et la compression ne doivent pas figer l'interface.
+     */
+    suspend fun exportToExcelUri(context: android.content.Context, uri: android.net.Uri): Result<Unit> =
+        runCatching {
+            val sessions = sessionDao.observeAllWithCategory().first()
+            val bytes = withContext(Dispatchers.Default) { excelExporter.build(sessions) }
+            backupManager.writeBytesToUri(context, uri, bytes)
+        }
 
     /** Lit puis restaure le fichier JSON choisi par l'utilisateur via le SAF. */
     suspend fun importFromUri(context: android.content.Context, uri: android.net.Uri): Result<ImportSummary> =

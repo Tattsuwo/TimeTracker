@@ -61,6 +61,15 @@ class SettingsViewModel(private val repository: TimeTrackerRepository) : ViewMod
         }
     }
 
+    /** Appelé avec l'Uri renvoyée par ACTION_CREATE_DOCUMENT pour l'export Excel (.xlsx). */
+    fun exportExcelTo(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            repository.exportToExcelUri(context, uri)
+                .onSuccess { _messages.emit("Export Excel terminé.") }
+                .onFailure { _messages.emit("Échec de l'export Excel : ${it.message}") }
+        }
+    }
+
     /** Appelé avec l'Uri renvoyée par ACTION_OPEN_DOCUMENT (voir SettingsScreen). */
     fun importFrom(context: Context, uri: Uri) {
         viewModelScope.launch {
