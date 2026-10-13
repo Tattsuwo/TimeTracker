@@ -102,6 +102,41 @@ class TimeTrackerRepository(
         projectDao.insert(Project(name = trimmed))
     }
 
+    /**
+     * Renomme un projet : la liste ET toutes les sessions qui portent l'ancien
+     * nom sont mises à jour dans une même transaction (tout ou rien), pour que
+     * l'historique, la synthèse et les exports restent cohérents. Refuse un nom
+     * vide ou déjà pris par UN AUTRE projet (majuscules ignorées) ; changer
+     * seulement la casse de son propre nom est autorisé.
+     */
+    suspend fun renameProject(project: Project, newName: String): Result<Unit> = runCatching {
+        val trimmed = newName.trim()
+        if (trimmed.isEmpty()) error("Le nom du projet ne peut pas être vide")
+        if (projectDao.countOtherByNameIgnoreCase(trimmed, project.id) > 0) error("Ce projet existe déjà")
+        if (trimmed != project.name) {
+            database.withTransaction {
+                sessionDao.renameProject(oldName = project.name, newName = trimmed)
+                projectDao.update(project.copy(name = trimmed))
+            }
+        }
+    }
+
+    /**
+     * Supprime un projet ET toutes les sessions qui lui sont associées, dans une
+     * même transaction (comme pour les catégories). Contrairement aux
+     * catégories, il n'y a pas de minimum : la liste peut être vide, on peut
+     * toujours en recréer un depuis le formulaire d'une session.
+     */
+    suspend fun deleteProject(project: Project): Result<Unit> = runCatching {
+        database.withTransaction {
+            sessionDao.deleteByProjectName(project.name)
+            projectDao.delete(project)
+        }
+    }
+
+    suspend fun countSessionsInProject(project: Project): Int = sessionDao.countByProjectName(project.name)
+    // Pour prévenir l'utilisateur ("X sessions seront supprimées") avant la confirmation.
+
     // --- Chronomètre ----------------------------------------------------
 
     fun observeActiveTimer(): Flow<ActiveTimer?> = activeTimerDao.observe()

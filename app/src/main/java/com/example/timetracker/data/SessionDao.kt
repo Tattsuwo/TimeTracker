@@ -51,6 +51,21 @@ interface SessionDao {
     // Utilisé pour prévenir l'utilisateur du nombre de sessions qui seront
     // supprimées avant qu'il ne confirme la suppression d'une catégorie.
 
+    @Query("UPDATE sessions SET name = :newName WHERE name = :oldName")
+    suspend fun renameProject(oldName: String, newName: String)
+    // Un projet est identifié par son nom dans chaque session : renommer un
+    // projet revient à changer ce nom dans toutes les sessions qui le portent
+    // (correspondance exacte, majuscules comprises).
+
+    @Query("DELETE FROM sessions WHERE name = :name")
+    suspend fun deleteByProjectName(name: String)
+    // Suppression des sessions d'un projet, juste avant de le retirer de la liste.
+
+    @Query("SELECT COUNT(*) FROM sessions WHERE name = :name")
+    suspend fun countByProjectName(name: String): Int
+    // Utilisé pour prévenir l'utilisateur du nombre de sessions qui seront
+    // supprimées avant qu'il ne confirme la suppression d'un projet.
+
     @Query("DELETE FROM sessions")
     suspend fun deleteAll()
     // Utilisé par une restauration JSON en mode "remplacement" : on vide la

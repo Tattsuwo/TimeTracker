@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timetracker.data.Category
+import com.example.timetracker.data.Project
 import com.example.timetracker.repository.TimeTrackerRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +17,9 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(private val repository: TimeTrackerRepository) : ViewModel() {
 
     val categories: StateFlow<List<Category>> = repository.observeCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val projects: StateFlow<List<Project>> = repository.observeProjects()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _messages = MutableSharedFlow<String>()
@@ -44,6 +48,33 @@ class SettingsViewModel(private val repository: TimeTrackerRepository) : ViewMod
                 .onFailure { _messages.emit(it.message ?: "Impossible de supprimer la catégorie.") }
         }
     }
+
+    fun addProject(name: String) {
+        viewModelScope.launch {
+            repository.addProject(name).onFailure {
+                _messages.emit(it.message ?: "Impossible de créer le projet.")
+            }
+        }
+    }
+
+    fun renameProject(project: Project, newName: String) {
+        viewModelScope.launch {
+            repository.renameProject(project, newName).onFailure {
+                _messages.emit(it.message ?: "Impossible de renommer le projet.")
+            }
+        }
+    }
+
+    fun deleteProject(project: Project) {
+        viewModelScope.launch {
+            repository.deleteProject(project)
+                .onSuccess { _messages.emit("Projet « ${project.name} » supprimé.") }
+                .onFailure { _messages.emit(it.message ?: "Impossible de supprimer le projet.") }
+        }
+    }
+
+    /** Nombre de sessions actuellement rattachées à ce projet (pour la confirmation de suppression). */
+    suspend fun sessionCountForProject(project: Project): Int = repository.countSessionsInProject(project)
 
     /**
      * Nombre de sessions actuellement rattachées à cette catégorie, pour

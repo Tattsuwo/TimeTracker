@@ -98,8 +98,12 @@ dérailler la compilation :
   catégories par défaut + création à la volée.
 - Projet choisi dans une liste déroulante (comme la catégorie), avec ajout
   d'un nouveau projet à la volée via « + Nouveau projet » (doublons refusés
-  sans tenir compte des majuscules). Pas encore de renommage ni de suppression
-  d'un projet de la liste.
+  sans tenir compte des majuscules).
+- Projets gérés dans les Réglages (sous les catégories) : ajout, renommage
+  (met aussi à jour toutes les sessions du projet, dans une transaction) et
+  suppression en cascade de ses sessions (avec confirmation et décompte).
+  Un projet peut être supprimé même s'il est le dernier : la liste peut être
+  vide. L'écran Réglages est une seule liste défilante.
 - Catégories : couleur personnalisable (palette fixe de 10 teintes), ajout
   depuis les Réglages ou à la volée pendant l'arrêt d'un chrono, modification,
   suppression en cascade de ses sessions (avec confirmation et décompte des
@@ -141,5 +145,7 @@ dérailler la compilation :
 ## Pistes d'évolution volontairement laissées de côté
 
 - Filtrage par période dans la synthèse (aujourd'hui/7 jours/tout).
+- Fusion de deux projets (aujourd'hui, renommer un projet avec le nom d'un
+  autre est refusé comme doublon).
 - Sélecteur de couleur libre (roue HSV) plutôt que la palette fixe actuelle —
   choix assumé pour rester simple et sans dépendance externe.
